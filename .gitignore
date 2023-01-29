@@ -1,0 +1,8 @@
+/build/
+/out/
+/.idea/
+/.gradle/
+
+# Project related files
+/save/
+*.txt
