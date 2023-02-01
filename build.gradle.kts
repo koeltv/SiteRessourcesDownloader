@@ -1,12 +1,16 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val author = "Valentin Koeltgen"
+val packageName = "koeltv"
+
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.panteleyev.jpackageplugin") version "1.5.1"
     kotlin("jvm") version "1.7.20"
     application
 }
 
-group = "com.koeltv"
+group = "com.$packageName"
 version = "1.0"
 
 repositories {
@@ -52,4 +56,27 @@ tasks {
 
         //TODO Make it work correctly, currently replaced by shadowJar
     }
+}
+
+tasks.jpackage.configure {
+    dependsOn("shadowJar")
+
+    appName = application.applicationName
+    vendor = author
+    appVersion = version.toString()
+    icon = "./resources/download.ico"
+    input = "./build/libs/"
+    destination = "./build/jpackage"
+    mainJar = "${application.applicationName}-$version-all.jar"
+
+    //Windows options
+    winConsole = true
+    winDirChooser = true
+    winShortcut = true
+    winMenu = true
+    winMenuGroup = packageName
+
+    //Linux options
+    linuxMenuGroup = packageName
+    linuxShortcut = true
 }
