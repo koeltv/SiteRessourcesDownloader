@@ -18,8 +18,6 @@ object PDFHandler {
             screenPoints.getOrPut("printButtonPosition") { UserInterface.waitAndReturnMousePosition() }
         UserInterface.mouseMove(printButtonPosition)
         UserInterface.click()
-
-        UserInterface.mouseMove(printButtonPosition)
         UserInterface.click()
 
         //Wait for print menu to load
@@ -27,16 +25,12 @@ object PDFHandler {
 //        Thread.sleep(15000) //https://padlet.com/cecile_laloux/HARCELEMENT_ARCIS_6_JANV/wish/1059086229
 
         //Select destination
-        val destinationButtonPosition =
-            screenPoints.getOrPut("destinationButtonPosition") { UserInterface.waitAndReturnMousePosition() }
-        UserInterface.mouseMove(destinationButtonPosition)
+        UserInterface.mouseMove(screenPoints.getOrPut("destinationButtonPosition") { UserInterface.waitAndReturnMousePosition() })
         UserInterface.click()
 
         //Select output
         Thread.sleep(1000)
-        val toPDFButtonPosition =
-            screenPoints.getOrPut("toPDFButtonPosition") { UserInterface.waitAndReturnMousePosition() }
-        UserInterface.mouseMove(toPDFButtonPosition)
+        UserInterface.mouseMove(screenPoints.getOrPut("toPDFButtonPosition") { UserInterface.waitAndReturnMousePosition() })
         UserInterface.click()
 
         //Confirm
@@ -48,10 +42,11 @@ object PDFHandler {
 
         //Validate filename and save
         Thread.sleep(DELAY_BETWEEN_USER_ACTION)
+        UserInterface.mouseMove(screenPoints.getOrPut("confirmButtonPosition") { UserInterface.waitAndReturnMousePosition() })
+        UserInterface.click()
         UserInterface.confirm()
 
         waitForDownloadViaPrint()
-//        Thread.sleep(25000)
     }
 
     /**
@@ -67,7 +62,7 @@ object PDFHandler {
         do {
             Thread.sleep(500)
             newState = UserInterface.getPixelColor(printButtonPosition)
-        } while (newState == previousState && System.currentTimeMillis() - startingPoint < 30000)
+        } while (newState == previousState && System.currentTimeMillis() - startingPoint < 40000)
         Thread.sleep(1000)
     }
 

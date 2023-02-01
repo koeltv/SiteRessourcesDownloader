@@ -4,7 +4,7 @@ import org.openqa.selenium.TimeoutException
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.firefox.FirefoxDriver
-import org.openqa.selenium.firefox.FirefoxProfile
+import org.openqa.selenium.firefox.FirefoxOptions
 import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 import java.io.File
@@ -17,6 +17,8 @@ abstract class SiteScraper {
         internal val failureFile = File("./save/failure.txt")
     }
 
+    private val driverOptions = FirefoxOptions()
+
     abstract val linksRegex: Regex
     abstract val filteredLinksRegex: Regex
     abstract val fileRegex: Regex
@@ -27,15 +29,17 @@ abstract class SiteScraper {
 
     init {
         WebDriverManager.firefoxdriver().setup()
+        val browserPath = WebDriverManager.firefoxdriver().browserPath
+            .orElseThrow { Exception("Firefox not found") }
+            .also { println("Firefox found at $it") }
 
-        System.setProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE,"/dev/null")
+        System.setProperty(FirefoxDriver.SystemProperty.BROWSER_BINARY, browserPath.toString())
+        System.setProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE, "/dev/null")
 
         // To prevent download dialog
-        val profile = FirefoxProfile()
-        profile.setPreference("browser.download.folderList", 2) // custom location
-        profile.setPreference("browser.download.manager.showWhenStarting", false)
-        profile.setPreference("browser.download.dir", "./download")
-        profile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/csv")
+        driverOptions.profile.setPreference("browser.download.folderList", 2)
+        driverOptions.profile.setPreference("browser.download.manager.showWhenStarting", false)
+        driverOptions.profile.setPreference("browser.download.dir", UserInterface.downloadFolder)
     }
 
     /**
@@ -43,27 +47,6 @@ abstract class SiteScraper {
      *
      */
     abstract fun load()
-
-    /**
-     * Register a link as a success.
-     * A link is registered as a success when its content was successfully used, that means either all links were exported from it
-     * or the file it contained was successfully downloaded.
-     *
-     * @param url
-     */
-    fun registerSuccess(url: String) {
-        successFile.appendText(url + "\n")
-    }
-
-    /**
-     * Register a link as a failure.
-     * A link is registered as a failure when the link(s) it contains where not exploited or the file it contains wasn't downloaded correctly.
-     *
-     * @param url
-     */
-    fun registerFailure(url: String) {
-        failureFile.appendText(url + "\n")
-    }
 
     /**
      * Count downloaded files (all files in the Download folder)
@@ -92,7 +75,7 @@ abstract class SiteScraper {
                 downloadFile(link)
             } else {
                 consumedLinks.add(link)
-                successFile.appendText(link + "\n")
+                registerLink(link)
 
                 val sourceCode = scrapeWebsite(link)
                 linksRegex.findAll(sourceCode)
@@ -152,9 +135,9 @@ abstract class SiteScraper {
      */
     fun WebDriver.waitForDownload(): Boolean {
         get("about:downloads")
-        return waitUntilOrTimeout(20000) {
+        return waitUntilOrTimeout(30000) {
             ExpectedConditions.not(ExpectedConditions.presenceOfElementLocated(By.className("downloadIconCancel")))
-        }.also { Thread.sleep(1000) }
+        }.also { Thread.sleep(3000) }
     }
 
     /**
@@ -179,7 +162,7 @@ abstract class SiteScraper {
      * @return
      */
     fun <R> withDriver(block: (WebDriver) -> R): R {
-        val driver = FirefoxDriver()
+        val driver = FirefoxDriver(driverOptions)
         return block.invoke(driver).also { driver.quit() }
     }
 
@@ -188,6 +171,23 @@ abstract class SiteScraper {
      *
      */
     fun saveState() {
-        linksToConsume.forEach { failureFile.appendText(it + "\n") }
+        linksToConsume.forEach { registerLink(it, true) }
+    }
+
+    /**
+     * Register a link.
+     * A link is registered as a success when its content was successfully used, that means either all links were exported from it
+     * or the file it contained was successfully downloaded.
+     *
+     * @param url
+     * @param failed true if the link is a failure, false otherwise
+     */
+    fun registerLink(url: String, failed: Boolean = false) {
+        val text = "$url\r\n"
+        if (failed) {
+            failureFile.appendText(text)
+        } else {
+            successFile.appendText(text)
+        }
     }
 }

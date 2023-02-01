@@ -13,6 +13,7 @@ class PadletScraper : SiteScraper() {
 
     override val linksToConsume = mutableSetOf<String>()
     override val consumedLinks = mutableSetOf(
+        "https://padlet.com/",
         "https://padlet.com/auth/signup",
         "https://padlet.com/auth/login",
         "https://padlet.com/auth/org_login_redirect",
@@ -77,7 +78,7 @@ class PadletScraper : SiteScraper() {
             }
             //If the iframe wasn't found, exit
             if (didTimeout) {
-                failureFile.appendText(url + "\n")
+                registerLink(url, true)
                 return@withDriver
             }
 
@@ -105,11 +106,7 @@ class PadletScraper : SiteScraper() {
                 PDFHandler.export()
             }
 
-            if (countDownloadedFiles() > nbOfDownloadedFiles) {
-                registerSuccess(url)
-            } else {
-                registerFailure(url)
-            }
+            registerLink(url, countDownloadedFiles() <= nbOfDownloadedFiles)
         }
     }
 }
