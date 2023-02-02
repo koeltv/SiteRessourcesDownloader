@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.panteleyev.jpackage.ImageType
 
 val author = "Valentin Koeltgen"
 val packageName = "koeltv"
@@ -21,6 +22,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("org.seleniumhq.selenium:selenium-java:4.8.0")
     implementation("io.github.bonigarcia:webdrivermanager:5.3.2")
+    implementation(kotlin("reflect"))
 }
 
 tasks.test {
@@ -58,8 +60,20 @@ tasks {
     }
 }
 
+tasks {
+    register("version") {
+        doLast {
+            println("v$version")
+        }
+    }
+}
+
 tasks.jpackage.configure {
     dependsOn("shadowJar")
+
+    if(project.hasProperty("type")) {
+        type = ImageType.valueOf(project.property("type").toString().toUpperCase())
+    }
 
     appName = application.applicationName
     vendor = author
