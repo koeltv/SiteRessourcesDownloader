@@ -49,5 +49,6 @@ jobs:
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
-        artifacts: "lib/*-all.jar,jpackage/*"
+        artifacts: "${{github.workspace}}/build/lib/*-all.jar,${{github.workspace}}/build/jpackage/*"
         tag: ${{ env.VERSION_INFORMATION }}
+        allowUpdates: true
