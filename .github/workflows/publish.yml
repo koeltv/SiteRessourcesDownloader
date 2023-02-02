@@ -42,8 +42,8 @@ jobs:
       
     - name: Get current version on Windows
       if: matrix.os == 'windows-latest'
-      run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $env:GITHUB_ENV
-      
+      run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: Create installer per OS
       run: ./gradlew jpackage
       
