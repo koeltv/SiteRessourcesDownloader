@@ -2,7 +2,6 @@
 /out/
 /.idea/
 /.gradle/
-/gradle/
 
 # Project related files
 /save/
