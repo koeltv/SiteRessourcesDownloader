@@ -36,8 +36,13 @@ jobs:
     - name: Setup Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       
-    - name: Get current version
+    - name: Get current version on Linux
+      if: matrix.os == 'ubuntu-latest'
       run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $GITHUB_ENV
+      
+    - name: Get current version on Windows
+      if: matrix.os == 'windows-latest'
+      run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $env:GITHUB_ENV
       
     - name: Create installer per OS
       run: ./gradlew jpackage
@@ -49,6 +54,6 @@ jobs:
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
-        artifacts: "${{github.workspace}}/build/lib/*-all.jar,${{github.workspace}}/build/jpackage/*"
+        artifacts: "${{github.workspace}}/build/libs/*-all.jar,${{github.workspace}}/build/jpackage/*"
         tag: ${{ env.VERSION_INFORMATION }}
         allowUpdates: true
