@@ -37,7 +37,7 @@ jobs:
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       
     - name: Get current version
-      run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q printVersionInformation)" >> $GITHUB_ENV
+      run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $GITHUB_ENV
       
     - name: Create installer per OS
       run: ./gradlew jpackage
