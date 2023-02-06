@@ -18,6 +18,11 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
+      - name: Change wrapper permissions
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: chmod +x ./gradlew
+
       - name: Get current version on Linux
         if: matrix.os == 'ubuntu-latest'
         run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $GITHUB_ENV
@@ -60,11 +65,6 @@ jobs:
 
       - name: Prepare
         uses: ./.github/actions/prepare
-
-      - name: Change wrapper permissions
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: chmod +x ./gradlew
 
       - name: Load Shadow JAR
         uses: actions/cache/restore@v3
