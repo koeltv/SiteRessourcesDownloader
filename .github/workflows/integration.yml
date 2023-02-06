@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  test:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
@@ -15,6 +15,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Prepare
         uses: ./.github/actions/prepare
 
