@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Prepare
-        uses: ./.github/workflows/prepare
+        uses: ./.github/actions/prepare
 
       - name: Get current version on Linux
         if: matrix.os == 'ubuntu-latest'
