@@ -34,7 +34,7 @@ jobs:
       - name: Cache Shadow JAR
         uses: actions/cache/save@v3
         with:
-          path: ./build/libs
+          path: ./build
           key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
@@ -75,7 +75,7 @@ jobs:
       - name: Load Shadow JAR
         uses: actions/cache/restore@v3
         with:
-          path: ./build/libs
+          path: ./build
           key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
@@ -83,6 +83,7 @@ jobs:
         run: ./gradlew jpackage
 
       - name: Create additional artifacts for Windows
+        if: matrix.os == 'windows-latest'
         run: ./gradlew jpackage -Ptype=msi
 
       - name: Update Release
