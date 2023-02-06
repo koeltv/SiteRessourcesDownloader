@@ -3,57 +3,72 @@ name: Gradle Package
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Java CI with Gradle"]
+    workflows: [ "Java CI with Gradle" ]
     branches: [ "master" ]
-    types: 
+    types:
       - completed
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare
+        uses: ./.github/workflows/prepare
+
+      - name: Get current version on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $GITHUB_ENV
+
+      - name: Get current version on Windows
+        if: matrix.os == 'windows-latest'
+        run: echo "VERSION_INFORMATION=$(./gradlew -q version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Create Shadow JAR
+        run: ./gradlew shadowJar
+
+      - name: Cache Shadow JAR
+        uses: actions/cache@v3
+        with:
+          path: ./build/libs
+          key: build-${{ env.VERSION_INFORMATION }}
+
+      - name: Add Shadow JAR to the release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: "${{github.workspace}}/build/libs/*-all.jar"
+          tag: ${{ env.VERSION_INFORMATION }}
+          allowUpdates: true
+
   release:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
-  
     runs-on: ${{ matrix.os }}
+    needs: build
     
     permissions:
       contents: write
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: Change wrapper permissions
-      if: matrix.os == 'ubuntu-latest'
-      run: chmod +x ./gradlew
+      - name: Prepare
+        uses: ./.github/workflows/prepare
 
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-      
-    - name: Get current version on Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $GITHUB_ENV
-      
-    - name: Get current version on Windows
-      if: matrix.os == 'windows-latest'
-      run: echo "VERSION_INFORMATION=$(./gradlew -q version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Load Shadow JAR
+        uses: actions/cache/restore@v3
+        with:
+          path: ./build/libs
+          key: build-${{ env.VERSION_INFORMATION }}
 
-    - name: Create installer per OS
-      run: ./gradlew jpackage
-      
-    - name: Create additionnal artifacts for Windows
-      if: matrix.os == 'windows-latest'
-      run: ./gradlew jpackage -Ptype=msi
-        
-    - name: Create Release
-      uses: ncipollo/release-action@v1.12.0
-      with:
-        artifacts: "${{github.workspace}}/build/libs/*-all.jar,${{github.workspace}}/build/jpackage/*"
-        tag: ${{ env.VERSION_INFORMATION }}
-        allowUpdates: true
+      - name: Create installer per OS
+        run: ./gradlew jpackage
+
+      - name: Create additional artifacts for Windows
+        if: matrix.os == 'windows-latest'
+        run: ./gradlew jpackage -Ptype=msi
+
+      - name: Update Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: "${{github.workspace}}/build/jpackage/*"
+          tag: ${{ env.VERSION_INFORMATION }}
+          allowUpdates: true
