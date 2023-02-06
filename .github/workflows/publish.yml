@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Prepare
-        uses: ./.github/workflows/prepare
+        uses: ./.github/workflows/prepare.yml
 
       - name: Load Shadow JAR
         uses: actions/cache/restore@v3
