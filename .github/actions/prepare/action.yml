@@ -1,31 +1,27 @@
 name: Prepare
+description: 'Prepares the environment for the build'
+inputs:
+  runner-os:
+    description: 'The operating system to run on'
+    required: true
+    default: '[ "ubuntu-latest", "windows-latest" ]'
 
-on:
-  workflow_call:
-    inputs:
-      runner-os:
-        type: string
-        default: '["ubuntu-latest", "windows-latest"]'
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
 
-jobs:
-  prepare:
-    strategy:
-      matrix:
-        os: ${{fromJSON(inputs.runner-os)}}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+    - name: Change wrapper permissions
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: chmod +x ./gradlew
 
-      - name: Change wrapper permissions
-        if: matrix.os == 'ubuntu-latest'
-        run: chmod +x ./gradlew
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
