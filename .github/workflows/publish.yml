@@ -50,11 +50,8 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Prepare
-        uses: ./.github/workflows/prepare.yml
+        uses: ./.github/actions/prepare
 
       - name: Load Shadow JAR
         uses: actions/cache/restore@v3
