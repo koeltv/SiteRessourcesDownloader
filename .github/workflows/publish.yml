@@ -34,7 +34,9 @@ jobs:
       - name: Cache Shadow JAR
         uses: actions/cache/save@v3
         with:
-          path: ./build
+          path: |
+            ./build
+            ./.gradle
           key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
@@ -75,7 +77,9 @@ jobs:
       - name: Load Shadow JAR
         uses: actions/cache/restore@v3
         with:
-          path: ./build
+          path: |
+            ./build
+            ./.gradle
           key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
