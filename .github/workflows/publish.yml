@@ -26,9 +26,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Create Shadow JAR
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: shadowJar
+        run: ./gradlew shadowJar
 
       - name: Get current version
         run: echo "VERSION_INFORMATION=$(${{github.workspace}}/gradlew -q version)" >> $GITHUB_ENV
@@ -37,7 +35,8 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: ./build/libs
-          key: build-${{ env.VERSION_INFORMATION }}
+          key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
+          enableCrossOsArchive: true
 
       - name: Add Shadow JAR to the release
         uses: ncipollo/release-action@v1.12.0
@@ -62,6 +61,8 @@ jobs:
 
       - name: Prepare
         uses: ./.github/actions/prepare
+        with:
+          runner-os: ${{ matrix.os }}
 
       - name: Get current version on Linux
         if: matrix.os == 'ubuntu-latest'
@@ -75,18 +76,14 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ./build/libs
-          key: build-${{ env.VERSION_INFORMATION }}
+          key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
+          enableCrossOsArchive: true
 
       - name: Create installer per OS
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jpackage
+        run: ./gradlew jpackage
 
       - name: Create additional artifacts for Windows
-        if: matrix.os == 'windows-latest'
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jpackage -Ptype=msi
+        run: ./gradlew jpackage -Ptype=msi
 
       - name: Update Release
         uses: ncipollo/release-action@v1.12.0
