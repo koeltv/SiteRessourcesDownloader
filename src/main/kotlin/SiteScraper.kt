@@ -11,7 +11,7 @@ import java.io.File
 import java.net.URL
 import java.time.Duration
 
-abstract class SiteScraper {
+sealed class SiteScraper {
     companion object {
         internal val successFile = File("./save/success.txt")
         internal val failureFile = File("./save/failure.txt")
@@ -19,13 +19,13 @@ abstract class SiteScraper {
 
     private val driverOptions = FirefoxOptions()
 
-    abstract val linksRegex: Regex
-    abstract val filteredLinksRegex: Regex
+    open val linksRegex = Regex("(<a .*href=\"([^ ]+)\")|(src=\"([^ ]+\\..+)\")")
+    abstract val filteredLinksRegex: Regex?
     abstract val fileRegex: Regex
 
-    abstract val consumedLinks: MutableSet<String>
+    open val consumedLinks = mutableSetOf<String>()
 
-    abstract val linksToConsume: MutableSet<String>
+    open val linksToConsume = mutableSetOf<String>()
 
     init {
         WebDriverManager.firefoxdriver().setup()
@@ -40,13 +40,36 @@ abstract class SiteScraper {
         driverOptions.profile.setPreference("browser.download.folderList", 2)
         driverOptions.profile.setPreference("browser.download.manager.showWhenStarting", false)
         driverOptions.profile.setPreference("browser.download.dir", UserInterface.downloadFolder)
+
+        load()
     }
 
     /**
-     * Load all unexplored URL from failureFile
+     * Load all unexplored URL from failureFile and add the already explored URL to consumedLinks
      *
      */
-    abstract fun load()
+    private fun load() {
+        File("./save").mkdir()
+
+        successFile.createNewFile()
+        successFile.useLines { lineSequence ->
+            lineSequence.forEach { consumedLinks.add(it) }
+        }
+
+        //recuperate all failed links and add them to the process list
+        failureFile.createNewFile()
+        failureFile.readLines().forEach { linksToConsume.add(it) }
+        failureFile.delete()
+        failureFile.createNewFile()
+    }
+
+    /**
+     * Check if the scraper can handle the given URL
+     *
+     * @param url
+     * @return
+     */
+    abstract fun canHandle(url: String): Boolean
 
     /**
      * Count downloaded files (all files in the Download folder)
@@ -82,7 +105,7 @@ abstract class SiteScraper {
                     .map { match ->
                         match.destructured.component2().ifBlank { match.destructured.component4() }
                     }.filter {
-                        it !in consumedLinks && !it.matches(filteredLinksRegex) && it.contains(baseURL)
+                        it !in consumedLinks && !it.matches(filteredLinksRegex ?: Regex(".*")) && it.contains(baseURL)
                     }.forEach {
                         linksToConsume.add(it)
                     }

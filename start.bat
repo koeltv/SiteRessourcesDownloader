@@ -1,1 +1,0 @@
-java -jar ./SiteRessourcesDownloader-1.0-all.jar

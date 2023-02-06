@@ -10,34 +10,17 @@ class PadletScraper : SiteScraper() {
     override val linksRegex = Regex("(<a .*href=\"([^ ]+)\")|(src=\"([^ ]+\\.pdf)\")")
     override val filteredLinksRegex = Regex(".+/auth/signup.*")
     override val fileRegex = Regex(".+/wish/\\d+")
-
-    override val linksToConsume = mutableSetOf<String>()
-    override val consumedLinks = mutableSetOf(
-        "https://padlet.com/",
-        "https://padlet.com/auth/signup",
-        "https://padlet.com/auth/login",
-        "https://padlet.com/auth/org_login_redirect",
-        "https://padlet.com/about/accessibility",
-        "https://padlet.com/contact-us",
-    )
+    override fun canHandle(url: String) = url.matches(Regex("https?://padlet.com/.*"))
 
     init {
-        load()
-    }
-
-    override fun load() {
-        File("./save").mkdir()
-
-        successFile.createNewFile()
-        successFile.useLines { lineSequence ->
-            lineSequence.forEach { consumedLinks.add(it) }
-        }
-
-        //recuperate all failed links and add them to the process list
-        failureFile.createNewFile()
-        failureFile.readLines().forEach { linksToConsume.add(it) }
-        failureFile.delete()
-        failureFile.createNewFile()
+        consumedLinks.addAll(listOf(
+            "https://padlet.com/",
+            "https://padlet.com/auth/signup",
+            "https://padlet.com/auth/login",
+            "https://padlet.com/auth/org_login_redirect",
+            "https://padlet.com/about/accessibility",
+            "https://padlet.com/contact-us",
+        ))
     }
 
     @Suppress("unused")
