@@ -4,7 +4,7 @@ inputs:
   runner-os:
     description: 'The operating system to run on'
     required: true
-    default: '[ "ubuntu-latest", "windows-latest" ]'
+    default: '[ "ubuntu-latest" ]'
 
 runs:
   using: composite
@@ -16,7 +16,6 @@ runs:
         distribution: 'temurin'
 
     - name: Change wrapper permissions
-      if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: chmod +x ./gradlew
 

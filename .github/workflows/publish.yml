@@ -22,9 +22,6 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
-
       - name: Create Shadow JAR
         run: ./gradlew shadowJar
 
@@ -74,7 +71,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: echo "VERSION_INFORMATION=$(./gradlew -q version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Load Shadow JAR
+      - name: Load Cache
         uses: actions/cache/restore@v3
         with:
           path: |
