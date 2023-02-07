@@ -10,10 +10,44 @@ on:
 jobs:
   build:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Create Shadow JAR
+        run: ./gradlew shadowJar
+
+      - name: Get current version
+        run: echo "VERSION_INFORMATION=$(./gradlew -q version)" >> $GITHUB_ENV
+
+      - name: Cache Shadow JAR
+        uses: actions/cache/save@v3
+        with:
+          path: ./build/libs/*-all.jar
+          key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
+          enableCrossOsArchive: true
+
+      - name: Add Shadow JAR to the release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: "${{github.workspace}}/build/libs/*-all.jar"
+          tag: ${{ env.VERSION_INFORMATION }}
+          allowUpdates: true
+
+  release:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
+    needs: build
     
     permissions:
       contents: write
@@ -35,19 +69,23 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: echo "VERSION_INFORMATION=$(./gradlew -q version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Create Shadow JAR
-        run: ./gradlew shadowJar
+      - name: Load Cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ./build/libs/*-all.jar
+          key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
+          enableCrossOsArchive: true
 
       - name: Create installer per OS
-        run: ./gradlew jpackage
+        run: ./gradlew jpackage -PignoreShadow
 
-      - name: Create additional installer for Windows
+      - name: Create additional artifacts for Windows
         if: matrix.os == 'windows-latest'
-        run: ./gradlew jpackage -Ptype=msi
+        run: ./gradlew jpackage -PignoreShadow -Ptype=msi
 
-      - name: Update Release with artifacts
+      - name: Update Release
         uses: ncipollo/release-action@v1.12.0
         with:
-          artifacts: "${{github.workspace}}/build/libs/*-all.jar,${{github.workspace}}/build/jpackage/*"
+          artifacts: "${{github.workspace}}/build/jpackage/*"
           tag: ${{ env.VERSION_INFORMATION }}
           allowUpdates: true

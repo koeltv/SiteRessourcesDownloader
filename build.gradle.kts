@@ -69,7 +69,9 @@ tasks {
 }
 
 tasks.jpackage.configure {
-    dependsOn("shadowJar")
+    if (!project.hasProperty("ignoreShadow")) {
+        dependsOn("shadowJar")
+    }
 
     if(project.hasProperty("type")) {
         type = ImageType.valueOf(project.property("type").toString().toUpperCase())
