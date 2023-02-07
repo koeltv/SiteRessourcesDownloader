@@ -15,6 +15,9 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      version: ${{ steps.versioning.outputs.VERSION_INFORMATION }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -42,6 +45,10 @@ jobs:
           tag: ${{ env.VERSION_INFORMATION }}
           allowUpdates: true
 
+      - name: Export version
+        id: versioning
+        run: echo "version=${{ env.VERSION_INFORMATION }}" >> $GITHUB_OUTPUT
+
   release:
     strategy:
       matrix:
@@ -61,19 +68,11 @@ jobs:
         with:
           runner-os: ${{ matrix.os }}
 
-      - name: Get current version on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: echo "VERSION_INFORMATION=$(./gradlew -q version)" >> $GITHUB_ENV
-
-      - name: Get current version on Windows
-        if: matrix.os == 'windows-latest'
-        run: echo "VERSION_INFORMATION=$(./gradlew -q version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
       - name: Load Cache
         uses: actions/cache/restore@v3
         with:
           path: ./build/libs/*-all.jar
-          key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
+          key: build-${{ needs.build.outputs.version }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
       - name: Create installer per OS
@@ -87,5 +86,5 @@ jobs:
         uses: ncipollo/release-action@v1.12.0
         with:
           artifacts: "${{github.workspace}}/build/jpackage/*"
-          tag: ${{ env.VERSION_INFORMATION }}
+          tag: ${{ needs.build.outputs.version }}
           allowUpdates: true
