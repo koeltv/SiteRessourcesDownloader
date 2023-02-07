@@ -16,7 +16,7 @@ jobs:
       contents: write
 
     outputs:
-      version: ${{ steps.versioning.outputs.VERSION_INFORMATION }}
+      version: ${{ steps.versioning.outputs.version }}
 
     steps:
       - name: Checkout
