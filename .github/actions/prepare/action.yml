@@ -20,5 +20,5 @@ runs:
       shell: bash
       run: chmod +x ./gradlew
 
-#    - name: Setup Gradle
-#      uses: gradle/gradle-build-action@v2.3.3
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2.3.3
