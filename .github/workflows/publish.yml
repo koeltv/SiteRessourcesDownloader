@@ -32,8 +32,8 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            ./build
-            ./.gradle
+            ./build/**
+            ./.gradle/**
           key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
@@ -75,8 +75,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            ./build
-            ./.gradle
+            ./build/**
+            ./.gradle/**
           key: build-${{ env.VERSION_INFORMATION }}-${{ github.run_id }}
           enableCrossOsArchive: true
 
